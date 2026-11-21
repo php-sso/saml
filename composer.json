@@ -1,0 +1,55 @@
+{
+    "name": "php-sso/saml",
+    "description": "SAML 2.0 for PHP applications. Sign people in through a company's identity provider (service provider role); the application's connections and request storage sit behind interfaces you implement.",
+    "keywords": [
+        "saml",
+        "saml2",
+        "sso",
+        "service-provider",
+        "single-sign-on",
+        "identity"
+    ],
+    "type": "library",
+    "license": "MIT",
+    "homepage": "https://github.com/php-sso/saml",
+    "support": {
+        "issues": "https://github.com/php-sso/saml/issues",
+        "source": "https://github.com/php-sso/saml"
+    },
+    "require": {
+        "ext-dom": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "onelogin/php-saml": "^4.5",
+        "php": "^8.2"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.0",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpstan/phpstan-strict-rules": "^2.0",
+        "phpunit/phpunit": "^11.0 || ^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "PhpSso\\Saml\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "PhpSso\\Saml\\Tests\\Unit\\": "tests/unit/PhpSso/Saml/",
+            "PhpSso\\Saml\\Tests\\Support\\": "tests/support/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "analyse": "phpstan analyse --memory-limit=1G",
+        "check": [
+            "@analyse",
+            "@test"
+        ]
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "stable"
+}
