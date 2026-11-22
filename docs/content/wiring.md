@@ -15,6 +15,7 @@ This page builds a complete sign-in. It assumes you have implemented the two int
 use PhpSso\Saml\ServiceProvider\SignIn;
 
 $signIn = new SignIn($connectionRepository, $requestStore, 'https://sso.example.com');
+// A fourth argument, a signing key, signs requests for connections that need it: see Connections.
 ```
 
 The third argument is the address people reach your application at. The entity id and the reply address are built from it.

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace PhpSso\Saml\Tests\Support;
 
 use PhpSso\Saml\ServiceProvider\SignIn;
+use PhpSso\Saml\ServiceProvider\SpSigningKey;
 
 /** A company connection (acme.com) with a fake identity provider, and the service that talks to it. */
 final class Support
@@ -16,13 +17,13 @@ final class Support
     public readonly int $id;
 
     /** @param list<string> $domains */
-    public function __construct(string $baseUrl = 'https://sso.test', bool $enabled = true, array $domains = ['acme.com'])
+    public function __construct(string $baseUrl = 'https://sso.test', bool $enabled = true, array $domains = ['acme.com'], bool $signRequests = false, ?SpSigningKey $signingKey = null)
     {
         $this->idp = new IdpFixture();
         $this->connections = new InMemoryConnections();
         $this->requests = new InMemoryRequests();
-        $this->service = new SignIn($this->connections, $this->requests, $baseUrl);
-        $this->id = $this->connections->add(IdpFixture::ENTITY_ID, IdpFixture::SSO_URL, $this->idp->certificatePem(), $enabled, $domains);
+        $this->service = new SignIn($this->connections, $this->requests, $baseUrl, $signingKey);
+        $this->id = $this->connections->add(IdpFixture::ENTITY_ID, IdpFixture::SSO_URL, $this->idp->certificatePem(), $enabled, $domains, $signRequests);
     }
 
     /** A request we sent and have not had an answer to. */

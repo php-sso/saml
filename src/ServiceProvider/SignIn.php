@@ -11,6 +11,8 @@ use OneLogin\Saml2\Settings;
 use OneLogin\Saml2\Utils;
 use PhpSso\Saml\ServiceProvider\Contract\ConnectionRepository;
 use PhpSso\Saml\ServiceProvider\Contract\RequestStore;
+use RobRichards\XMLSecLibs\XMLSecurityDSig;
+use RobRichards\XMLSecLibs\XMLSecurityKey;
 
 /**
  * Signing people in through a company's identity provider, with `onelogin/php-saml` doing the XML and signature work. We are
@@ -25,11 +27,15 @@ final class SignIn
     private const FIRST_NAME_ATTRIBUTES = ['givenname', 'firstname', 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname', 'urn:oid:2.5.4.42'];
     private const LAST_NAME_ATTRIBUTES = ['surname', 'sn', 'lastname', 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname', 'urn:oid:2.5.4.4'];
 
-    /** @param string $baseUrl the address people reach the application at, which the entity id and reply address are built on */
+    /**
+     * @param string $baseUrl the address people reach the application at, which the entity id and reply address are built on
+     * @param SpSigningKey|null $signingKey signs requests to the connections that ask for it, and its certificate is in the metadata
+     */
     public function __construct(
         private ConnectionRepository $connections,
         private RequestStore $requests,
         private string $baseUrl,
+        private ?SpSigningKey $signingKey = null,
     ) {
     }
 
@@ -54,7 +60,8 @@ final class SignIn
     /** What the company's administrator needs to set us up as an application (our entity id, answer address and metadata). */
     public function metadataXml(int $connectionId): string
     {
-        $settings = new Settings($this->settingsArray($connectionId, null), true);
+        $connection = $this->connections->find($connectionId);
+        $settings = new Settings($this->settingsArray($connectionId, null, $connection !== null && $connection->signRequests), true);
 
         return $settings->getSPMetadata();
     }
@@ -74,8 +81,11 @@ final class SignIn
         if (!$connection->enabled) {
             throw new SignInException('Signing in through your organisation is not available.', "Connection {$connectionId} is switched off.");
         }
+        if ($connection->signRequests && $this->signingKey === null) {
+            throw new SignInException('Signing in through your organisation is not set up correctly. Ask an administrator.', "Connection {$connectionId} must sign its requests, but there is no signing key.");
+        }
         try {
-            $auth = new Auth($this->settingsArray($connectionId, $connection));
+            $auth = new Auth($this->settingsArray($connectionId, $connection, $connection->signRequests));
             $url = $auth->login(bin2hex(random_bytes(8)), [], false, false, true);
             $requestId = (string) $auth->getLastRequestID();
         } catch (\Throwable $e) {
@@ -212,9 +222,10 @@ final class SignIn
 
     /**
      * @param IdpConnection|null $connection null when only our own side is needed (metadata)
+     * @param bool $signRequests whether requests are signed, which the metadata then says
      * @return array<string, mixed>
      */
-    private function settingsArray(int $connectionId, ?IdpConnection $connection): array
+    private function settingsArray(int $connectionId, ?IdpConnection $connection, bool $signRequests = false): array
     {
         $settings = [
             'strict' => true,
@@ -226,7 +237,9 @@ final class SignIn
                 'NameIDFormat' => Constants::NAMEID_UNSPECIFIED,
             ],
             'security' => [
-                'authnRequestsSigned' => false,
+                'authnRequestsSigned' => $signRequests && $this->signingKey !== null,
+                'signatureAlgorithm' => XMLSecurityKey::RSA_SHA256,
+                'digestAlgorithm' => XMLSecurityDSig::SHA256,
                 // Either the answer or the assertion must be signed (the library insists on at least one), and the signature must be the provider's.
                 'wantMessagesSigned' => false,
                 'wantAssertionsSigned' => false,
@@ -239,6 +252,13 @@ final class SignIn
                 'relaxDestinationValidation' => false,
             ],
         ];
+        if ($this->signingKey !== null) {
+            $settings['sp']['x509cert'] = $this->signingKey->certificate;
+            $settings['sp']['privateKey'] = $this->signingKey->privateKey;
+            if ($this->signingKey->nextCertificate !== null) {
+                $settings['sp']['x509certNew'] = $this->signingKey->nextCertificate;
+            }
+        }
         if ($connection !== null) {
             $settings['idp'] = [
                 'entityId' => $connection->entityId,

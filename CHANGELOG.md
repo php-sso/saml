@@ -2,6 +2,15 @@
 
 All notable changes are listed here. The format follows [Keep a Changelog](https://keepachangelog.com/) and the project follows [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+- Signed sign-in requests. `new SignIn(..., $signingKey)` takes an `SpSigningKey` (a private key and its certificate, with an optional
+  next certificate to publish ahead of a change of key), and `IdpConnection` has a `signRequests` flag. A signed request uses
+  RSA-SHA256 over the query string; the metadata carries the certificate and `AuthnRequestsSigned`. A connection that asks for
+  signing without a key is refused.
+- `SpSigningKey::generate()` makes a key and a self-signed certificate, and `SpSigningKey::fingerprint()` shows a certificate's fingerprint.
+- Not breaking: both new constructor arguments are optional.
+
 ## 1.0.0 - 2026-11-21
 
 First release.

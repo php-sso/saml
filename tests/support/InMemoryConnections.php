@@ -16,10 +16,10 @@ final class InMemoryConnections implements ConnectionRepository
      * @param list<string> $domains
      * @return int the new connection's id
      */
-    public function add(string $entityId, string $ssoUrl, string $certificate, bool $enabled = true, array $domains = ['acme.com']): int
+    public function add(string $entityId, string $ssoUrl, string $certificate, bool $enabled = true, array $domains = ['acme.com'], bool $signRequests = false): int
     {
         $id = count($this->connections) + 1;
-        $this->connections[$id] = new IdpConnection($id, $enabled, $entityId, $ssoUrl, $certificate, $domains);
+        $this->connections[$id] = new IdpConnection($id, $enabled, $entityId, $ssoUrl, $certificate, $domains, $signRequests);
 
         return $id;
     }

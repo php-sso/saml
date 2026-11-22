@@ -18,6 +18,31 @@ them as `IdpConnection` objects.
 | `ssoUrl` | Where the browser is sent to sign in. Only the HTTP-Redirect binding is used. |
 | `certificate` | The provider's signing certificate, PEM. Answers must be signed with it. |
 | `domains` | The lower-case email domains the provider may vouch for, such as `['acme.com']`. |
+| `signRequests` | Whether sign-in requests to this provider are signed (optional, `false` by default). Needs a [signing key](#signing-requests). |
+
+## Signing requests
+
+Most providers do not need signed requests: the answer is what carries the proof. Some do (a few ADFS and Shibboleth setups, and
+providers that only answer applications they know). For those, give the service a signing key and set `signRequests` on the
+connection:
+
+```php
+use PhpSso\Saml\ServiceProvider\SpSigningKey;
+
+$pair = SpSigningKey::generate('sso.example.com');          // once: a key and a self-signed certificate (valid 10 years)
+// keep $pair['privateKey'] secret and stored safely; $pair['certificate'] is public
+
+$key = new SpSigningKey($pair['privateKey'], $pair['certificate']);
+$signIn = new SignIn($connectionRepository, $requestStore, 'https://sso.example.com', $key);
+```
+
+- The request is signed with RSA-SHA256 as the HTTP-Redirect binding says: the signature covers the query string.
+- The **metadata** then holds the certificate and says `AuthnRequestsSigned="true"` for that connection, so the company's
+  administrator gets the certificate with the rest. `SpSigningKey::fingerprint($pem)` gives the SHA-256 fingerprint providers show.
+- A connection with `signRequests` but no key is **refused**: `begin()` throws a `SignInException` instead of sending a request
+  the provider will turn down or, worse, accept unsigned.
+- **Changing the key:** publish the new certificate first, as the third argument (`nextCertificate`). The metadata then lists both,
+  so companies can add the new one to their provider ahead of the switch. When they have, make the new pair the key and drop the old.
 
 ## Register your application at the provider
 
