@@ -22,9 +22,13 @@ PHP 8.2 or newer, with `ext-dom`, `ext-mbstring` and `ext-openssl`.
 
 The documentation is at **<https://php-sso.github.io/saml/>**:
 
-- [What it decides](https://php-sso.github.io/saml/what-it-decides/): what the library checks, and what it refuses
-- [What you provide](https://php-sso.github.io/saml/what-you-provide/): the interfaces your application implements
-- [Wiring](https://php-sso.github.io/saml/wiring/): putting it together
+- [How it works](https://php-sso.github.io/saml/how-it-works/): what happens between the click and the person you know
+- [Wiring](https://php-sso.github.io/saml/wiring/): the routes, the cookie and a first working sign-in
+- [Connections](https://php-sso.github.io/saml/connections/): registering your application at a company's provider
+- [Request storage](https://php-sso.github.io/saml/request-storage/): where requests wait, with a store to start from
+- [The identity](https://php-sso.github.io/saml/identity/): who signed in, and how to match them safely
+- [Errors and troubleshooting](https://php-sso.github.io/saml/errors/): why a sign-in was refused
+- [What it decides](https://php-sso.github.io/saml/what-it-decides/): what the library checks, refuses and does not support
 
 The pages are in [`docs/content`](docs/content), built with Hugo and the
 [php-sso docs theme](https://github.com/php-sso/docs-theme). Preview them with `hugo server --source docs`.

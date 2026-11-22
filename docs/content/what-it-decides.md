@@ -1,6 +1,7 @@
 ---
 title: "What it decides"
-weight: 2
+weight: 9
+group: "Operate"
 lead: "What the library checks, and what it refuses."
 ---
 
@@ -17,4 +18,14 @@ lead: "What the library checks, and what it refuses."
 - Email, display name and first and last name are found among the usual attribute names (`email`, `mail`, the Microsoft
   claim URIs, `urn:oid:` names), and a NameID in email format is used when no attribute has the address.
 
-Not supported yet: signed or encrypted requests, single logout, and HTTP-POST for the request.
+## Not supported
+
+| Not supported | What it means for you |
+| --- | --- |
+| Signed or encrypted requests | The `AuthnRequest` is sent unsigned. Providers that insist on signed requests cannot be used. |
+| Encrypted assertions | The provider must send assertions in the clear (signed, over https). |
+| Single logout | Signing out of your application does not sign people out of the company's provider, and the reverse. |
+| HTTP-POST for the request | The request always goes out as an HTTP-Redirect. |
+| Provider-started sign-in | An answer to a request you did not send is refused. Start from your own sign-in page. |
+| Several certificates per connection | A connection has one signing certificate. A rotation means a short change window. |
+| The identity provider role | Your application cannot yet vouch for people to another SAML service. |
